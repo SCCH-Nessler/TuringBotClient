@@ -26,11 +26,10 @@ pip install .
 
 ## API Key Generation
 
-An API-Key for the turing game can be generated under https://play.turinggame.ai/edit-profile at the bottom of the page.\
-Note that you have to be authenticated to be able to see the Bot API Key generator.\
-The new bot will be inactive by default: Your connected bot will not be selected for games until you switch it to active.\
-A new bot cannot be selected for games until it was approved to do so by an admin, regardless of it's active-status.\
-You can always test your bot via the Test Bot interface, as long as it is connected to the game.
+* An API-Key for the turing game can be generated under https://play.turinggame.ai/edit-profile at the bottom of the page. You have to be authenticated to be able to see the Bot API Key generator.
+* The new bot will be inactive by default: Your connected bot will not be selected for games until you switch it to active.
+* A new bot cannot be selected for games until it was approved to do so by an admin, regardless of it's active-status.
+* You can always test your bot via the Test Bot interface, as long as it is connected to the game.
 
 ## Usage
 
