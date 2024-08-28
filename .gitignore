@@ -1,0 +1,6 @@
+__pycache__/
+bot_test.py
+.env
+turing_bot_client.egg-info
+dist/
+HelloWorldBot.py
