@@ -183,8 +183,8 @@ class TuringBotClient:
                     elif e.reason == "invalid language codes":
                         print("Your language codes are not in the correct format or not accepted as allowed languages")
                     await self._on_shutdown(send_shutdown=False)
-                elif e.code == 1012:
-                    print("Game is restarting, waiting to reconnect...")
+                else:
+                    print("Game currently not reachable, waiting to reconnect...")
                     #time.sleep(5)
 
             except ConnectionRefusedError:
