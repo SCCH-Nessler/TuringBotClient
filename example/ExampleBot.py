@@ -1,3 +1,12 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+A very basic demo implementation of a bot for the turing game (play.turinggame.ai), using the API client
+"""
+__author__ = "Simon Schmid"
+
+
 from TuringBotClient import TuringBotClient
 from dotenv import load_dotenv
 import os
@@ -9,7 +18,7 @@ load_dotenv()
 
 class ExampleBot(TuringBotClient):
 
-    def __init__(self,api_key,bot_name,languages,openai_api_key):
+    def __init__(self,api_key: str,bot_name: str,languages: str,openai_api_key: str):
 
         super().__init__(api_key=api_key,bot_name=bot_name,languages=languages)
         self.client = OpenAI(api_key=openai_api_key)

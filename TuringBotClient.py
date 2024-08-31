@@ -1,3 +1,11 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+This library allows the development of bots for the turing game on play.turinggame.ai
+"""
+__author__ = "Simon Schmid"
+
 import time
 import websockets
 import json
