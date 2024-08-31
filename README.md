@@ -24,7 +24,7 @@ pip install turing-bot-client
 or
 
 git clone https://github.com/SCCH-Nessler/TuringBotClient.git
-cd your-repo-name
+cd TuringBotClient
 pip install .
 ```
 
