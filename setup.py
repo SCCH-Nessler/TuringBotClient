@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name='turing-bot-client',
-    version='0.0.1',
+    version='0.0.2',
     author='Simon Schmid',
     author_email='simon.schmid@scch.at',
     description='A small library to connect bots to the turing game',
