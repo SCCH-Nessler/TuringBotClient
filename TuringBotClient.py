@@ -187,6 +187,7 @@ class TuringBotClient:
                 else:
                     print("Game currently not reachable, waiting to reconnect...")
                     #time.sleep(5)
+                    continue
 
             except ConnectionRefusedError:
                 print("Connection refused, retry...")
