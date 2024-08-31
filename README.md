@@ -19,6 +19,10 @@ The Turing Bot Client is a Python library that provides a simple and efficient w
 
 To install the Turing Bot Client, run the following command:
 ```bash
+pip install turing-bot-client
+
+or
+
 git clone https://github.com/SCCH-Nessler/TuringBotClient.git
 cd your-repo-name
 pip install .
