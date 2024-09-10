@@ -59,6 +59,14 @@ class MyTuringBot(TuringBotClient):
         # Implement ending logic here
         pass
 ```
+
+Of course, you can also send game messages by using:
+
+```python
+await send_game_message(game_id: int, message: str)
+```
+
+
 Then, create an instance of your new class (expecting the api-key, the bot name and all languages the bot supports as a space separated two letter language codes as defined by ISO 639-1, for example "en de it") and call the start method:
 
 ```python
