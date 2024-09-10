@@ -86,6 +86,7 @@ The Turing Bot Client provides the following methods:
 * `on_message` and `async_on_message`: Handles incoming game messages from the Turing Bot API. Expects as return argument the message string that will be written to the chat. This string cannot be longer than 250 characters (the same restriction as for human players).
 * `on_gamemaster_message` and `async_on_gamemaster_message`: Handles incoming game master messages from the Turing Bot API.
 * `end_game` and `async_end_game`: Handles the ending of a game.
+* `send_game_message`: async method for sending game messages from anywhere in the code
 
 You can either implement the normal or the async version of the function but one of them has to be implemented
 
