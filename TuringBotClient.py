@@ -167,7 +167,7 @@ class TuringBotClient:
 
         while not self.shutdown_flag:
             try:
-                async with websockets.connect(self.api_endpoint,extra_headers = [self.basic_auth_header('alan','alan1950')]) as websocket:
+                async with websockets.connect(self.api_endpoint) as websocket:
                     print("connected, checking api key...")
                     await websocket.send(APIKeyMessage(api_key = self.api_key, bot_name = self.bot_name, languages = self.languages).model_dump_json())
                     #await websocket.send(json.dumps({"api_key":self.api_key}))

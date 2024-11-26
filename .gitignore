@@ -3,4 +3,5 @@ bot_test.py
 .env
 turing_bot_client.egg-info
 dist/
+build/
 HelloWorldBot.py
