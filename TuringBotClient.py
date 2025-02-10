@@ -7,13 +7,14 @@ This library allows the development of bots for the turing game on play.turingga
 __author__ = "Simon Schmid"
 
 import time
-import websockets
+import _websockets
 import json
 import asyncio
 import signal
+from typing import List
 from base64 import b64encode
 
-import websockets.exceptions
+import _websockets.exceptions
 from pydantic import BaseModel, Field, model_serializer, constr
 
 
@@ -44,6 +45,13 @@ class ShutdownMessage(BaseModel):
     api_key: str = Field(description="Your API key. This is required to ensure that you are allowed to access this game",
                          min_length=36,max_length=36)
     bot_name: str = Field(description= "The Bot Name as it is stored in the Game Database", min_length=1,max_length=255)
+
+class AccuseMessage(BaseModel):
+    type: str = Field(default="accuse_message")
+    game_id: int = Field(description="The game id of the game for which this message is supposed")
+    accuse: str = Field(description="The accusation message",min_length=1,max_length=255)
+    api_key: str = Field(description="Your API key. This is required to ensure that you are allowed to access this game",
+                         min_length=36,max_length=36)
     
 
 
@@ -59,31 +67,53 @@ class TuringBotClient:
         else:
             self.api_endpoint = endpoint+":"+str(port)+"/bot/"
 
-        self.websocket = None
+        self._websocket = None
         self.__event_loop = None
-        self.shutdown_flag = False
-        self.shutdown_already_running = False
+        self._shutdown_flag = False
+        self._shutdown_already_running = False
+        self._player_list = {}
 
 
 
     async def send_game_message(self,game_id: int,message: str):
         if message is not None:
             if len(message) > 0:
-                await self.websocket.send(GameMessage(type="game_message",game_id = game_id, message = message,api_key = self.api_key).model_dump_json())
+                await self._websocket.send(GameMessage(type="game_message",game_id = game_id, message = message,api_key = self.api_key).model_dump_json())
+
+    
+    async def send_accuse(self,game_id: int, accuse: str):
+        if accuse is not None:
+            if len(accuse) > 0:
+                #send only if accuse is in list of players
+                if accuse in self._player_list[game_id]:  # Check if the accused player is in the game's player list
+                    await self._websocket.send(AccuseMessage(type="accuse_message",game_id = game_id, accuse = accuse,api_key = self.api_key).model_dump_json())
 
     async def _receive(self):
-        messages = await self.websocket.recv()
+        messages = await self._websocket.recv()
         return json.loads(messages)
     
-    async def _bot_ready_check(self,game_id: int,bot: str,pl1: str,pl2: str, language: str):
-        bot_state = await self.async_start_game(game_id,bot,pl1,pl2,language)
-        await self.websocket.send(BotReadyMessage(type = "bot_ready", ready_state = bot_state, game_id = game_id, api_key = self.api_key).model_dump_json())
-        
-    async def async_start_game(self,game_id: int,bot: str,pl1: str,pl2: str, language: str) -> bool:
-        return self.start_game(game_id,bot,pl1,pl2,language)
-
+    async def _bot_ready_check(self,game_id: int,bot: str, players_list: List[str], language: str,):
+        #store player list in self._players dictionary
+        self._player_list[game_id] = players_list
+        bot_state = await self.async_start_game(game_id,bot,players_list,language)
+        await self._websocket.send(BotReadyMessage(type = "bot_ready", ready_state = bot_state, game_id = game_id, api_key = self.api_key).model_dump_json())
     
-    def start_game(self,game_id: int,bot: str,pl1: str,pl2: str,language:str) -> bool:
+    async def _bot_ready_check_old(self,game_id: int,bot: str,pl1: str,pl2: str, language: str):
+        bot_state = await self.async_start_game(game_id,bot,pl1,pl2,language)
+        await self._websocket.send(BotReadyMessage(type = "bot_ready", ready_state = bot_state, game_id = game_id, api_key = self.api_key).model_dump_json())
+    
+
+    async def async_start_game_old(self,game_id: int,bot: str,pl1: str,pl2: str, language: str) -> bool:
+        return self.start_game(game_id,bot,pl1,pl2,language)
+    
+    async def async_start_game(self,game_id: int,bot: str, players_list: List[str], language: str) -> bool:
+        return self.start_game(game_id,bot,players_list,language)
+   
+                                 
+    def start_game_old(self,game_id: int,bot: str,pl1: str,pl2: str,language:str) -> bool:
+        raise NotImplementedError("start_game is not implemented yet.")
+
+    def start_game(self,game_id: int,bot: str,players_list: List[str],language:str) -> bool:
         raise NotImplementedError("start_game is not implemented yet.")
     
     async def async_end_game(self,game_id: int) -> None:
@@ -117,18 +147,18 @@ class TuringBotClient:
 
     async def _on_shutdown(self,send_shutdown: bool):
 
-        self.shutdown_flag = True
+        self._shutdown_flag = True
         
-        if send_shutdown and not self.shutdown_already_running:
+        if send_shutdown and not self._shutdown_already_running:
             try:
-                await self.websocket.send(ShutdownMessage(type="shutdown",api_key = self.api_key, bot_name = self.bot_name).model_dump_json())
+                await self._websocket.send(ShutdownMessage(type="shutdown",api_key = self.api_key, bot_name = self.bot_name).model_dump_json())
             except:
                 pass
-            #await self.websocket.send(json.dumps({"type":"shutdown", "api_key":self.api_key}))
-            await self.websocket.close()
+            #await self._websocket.send(json.dumps({"type":"shutdown", "api_key":self.api_key}))
+            await self._websocket.close()
             self.on_shutdown()
 
-        self.shutdown_already_running = True
+        self._shutdown_already_running = True
 
         all_tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
 
@@ -165,26 +195,26 @@ class TuringBotClient:
 
         print("Starting to connect now")
 
-        while not self.shutdown_flag:
+        while not self._shutdown_flag:
             try:
-                async with websockets.connect(self.api_endpoint) as websocket:
+                async with _websockets.connect(self.api_endpoint) as _websocket:
                     print("connected, checking api key...")
-                    await websocket.send(APIKeyMessage(api_key = self.api_key, bot_name = self.bot_name, languages = self.languages).model_dump_json())
-                    #await websocket.send(json.dumps({"api_key":self.api_key}))
-                    self.websocket = websocket
+                    await _websocket.send(APIKeyMessage(api_key = self.api_key, bot_name = self.bot_name, languages = self.languages).model_dump_json())
+                    #await _websocket.send(json.dumps({"api_key":self.api_key}))
+                    self._websocket = _websocket
                     response = await self._receive()
                     if response['type'] == 'info':
                         print(f"Server Response: {response['message']}")
                     await self._main_loop()
             
-            except websockets.exceptions.ConnectionClosedOK as e:
-                print("Websockets Connection closed ok")
+            except _websockets.exceptions.ConnectionClosedOK as e:
+                print("_websockets Connection closed ok")
                 print(f"Connection closed with code: {e.code}")
                 if e.reason:
                     print(f"Reason: {e.reason}")
 
-            except websockets.exceptions.ConnectionClosedError as e:
-                print("Websockets Connection closed with error")
+            except _websockets.exceptions.ConnectionClosedError as e:
+                print("_websockets Connection closed with error")
                 print(f"Connection closed with code: {e.code}")
                 if e.code == 1008:
                     if e.reason == "invalid api key request":
@@ -201,11 +231,11 @@ class TuringBotClient:
                 print("Connection refused, retry...")
                 time.sleep(5)
                 continue
-            except websockets.exceptions.InvalidStatus:
+            except _websockets.exceptions.InvalidStatus:
                 print("Connection refused, retry...")
                 time.sleep(5)
                 continue
-            except websockets.exceptions.InvalidStatusCode:
+            except _websockets.exceptions.InvalidStatusCode:
                 print("Connection refused, retry...")
                 time.sleep(5)
                 continue
@@ -213,7 +243,7 @@ class TuringBotClient:
 
 
     async def _main_loop(self):
-        while not self.shutdown_flag:
+        while not self._shutdown_flag:
             message = await self._receive()
             if message['type'] == 'game_message':
                 asyncio.create_task(self._game_message_sender(message['game_id'],
@@ -222,12 +252,13 @@ class TuringBotClient:
                                                             message['bot']))
             elif message['type'] == 'start_game':
                 asyncio.create_task(self._bot_ready_check(message['game_id'],
-                                                        message['bot'],
-                                                        message['pl1'],
-                                                        message['pl2'],
-                                                        message['language']))
+                                                    message['bot'],
+                                                    message['players'],
+                                                    message['language']))
                 
             elif message['type'] == 'end_game':
+                #remove player list from dictionary
+                self._player_list.pop(message['game_id'], None) # remove game_id from dictionary if it exists
                 asyncio.create_task(self.async_end_game(message['game_id']))
 
             elif message['type'] == 'game_master':

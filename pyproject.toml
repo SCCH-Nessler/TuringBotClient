@@ -1,6 +1,6 @@
 [project]
 name = "turing-bot-client"
-version = "0.0.2.post1"
+version = "0.0.2.post2"
 authors = [
   { name="Simon Schmid", email="simon.schmid@scch.at" },
 ]
@@ -14,7 +14,7 @@ classifiers = [
 ]
 
 [build-system]
-requires = ["websockets>=12.0""pydantic>=2.8.2","setuptools"]
+requires = ["websockets>=12.0","pydantic>=2.8.2","setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project.urls]
