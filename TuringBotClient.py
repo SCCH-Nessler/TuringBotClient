@@ -7,14 +7,14 @@ This library allows the development of bots for the turing game on play.turingga
 __author__ = "Simon Schmid"
 
 import time
-import _websockets
+import websockets
 import json
 import asyncio
 import signal
 from typing import List
 from base64 import b64encode
 
-import _websockets.exceptions
+import websockets.exceptions
 from pydantic import BaseModel, Field, model_serializer, constr
 
 
@@ -71,7 +71,8 @@ class TuringBotClient:
         self.__event_loop = None
         self._shutdown_flag = False
         self._shutdown_already_running = False
-        self._player_list = {}
+        self.__player_list = {}
+        self.__player = {}
 
 
 
@@ -85,7 +86,7 @@ class TuringBotClient:
         if accuse is not None:
             if len(accuse) > 0:
                 #send only if accuse is in list of players
-                if accuse in self._player_list[game_id]:  # Check if the accused player is in the game's player list
+                if accuse in self.__player_list[game_id] and accuse != self.__player[game_id]:  # Check if the accused player is in the game's player list
                     await self._websocket.send(AccuseMessage(type="accuse_message",game_id = game_id, accuse = accuse,api_key = self.api_key).model_dump_json())
 
     async def _receive(self):
@@ -197,7 +198,7 @@ class TuringBotClient:
 
         while not self._shutdown_flag:
             try:
-                async with _websockets.connect(self.api_endpoint) as _websocket:
+                async with websockets.connect(self.api_endpoint) as _websocket:
                     print("connected, checking api key...")
                     await _websocket.send(APIKeyMessage(api_key = self.api_key, bot_name = self.bot_name, languages = self.languages).model_dump_json())
                     #await _websocket.send(json.dumps({"api_key":self.api_key}))
@@ -207,14 +208,14 @@ class TuringBotClient:
                         print(f"Server Response: {response['message']}")
                     await self._main_loop()
             
-            except _websockets.exceptions.ConnectionClosedOK as e:
-                print("_websockets Connection closed ok")
+            except websockets.exceptions.ConnectionClosedOK as e:
+                print("websockets Connection closed ok")
                 print(f"Connection closed with code: {e.code}")
                 if e.reason:
                     print(f"Reason: {e.reason}")
 
-            except _websockets.exceptions.ConnectionClosedError as e:
-                print("_websockets Connection closed with error")
+            except websockets.exceptions.ConnectionClosedError as e:
+                print("websockets Connection closed with error")
                 print(f"Connection closed with code: {e.code}")
                 if e.code == 1008:
                     if e.reason == "invalid api key request":
@@ -231,11 +232,11 @@ class TuringBotClient:
                 print("Connection refused, retry...")
                 time.sleep(5)
                 continue
-            except _websockets.exceptions.InvalidStatus:
+            except websockets.exceptions.InvalidStatus:
                 print("Connection refused, retry...")
                 time.sleep(5)
                 continue
-            except _websockets.exceptions.InvalidStatusCode:
+            except websockets.exceptions.InvalidStatusCode:
                 print("Connection refused, retry...")
                 time.sleep(5)
                 continue
@@ -258,10 +259,12 @@ class TuringBotClient:
                 
             elif message['type'] == 'end_game':
                 #remove player list from dictionary
-                self._player_list.pop(message['game_id'], None) # remove game_id from dictionary if it exists
+                self.__player_list.pop(message['game_id'], None) # remove game_id from dictionary if it exists
+                self.__player.pop(message['game_id'], None)
                 asyncio.create_task(self.async_end_game(message['game_id']))
 
             elif message['type'] == 'game_master':
+                print(f"Game Master Message for Game ID {message['game_id']}: {message['message']}")
                 asyncio.create_task(self.async_on_gamemaster_message(message['game_id'],
                                                                     message['message'],
                                                                     message['player'],
