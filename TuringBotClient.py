@@ -95,7 +95,8 @@ class TuringBotClient:
     
     async def _bot_ready_check(self,game_id: int,bot: str, players_list: List[str], language: str,):
         #store player list in self._players dictionary
-        self._player_list[game_id] = players_list
+        self.__player_list[game_id] = players_list
+        self.__player = bot
         bot_state = await self.async_start_game(game_id,bot,players_list,language)
         await self._websocket.send(BotReadyMessage(type = "bot_ready", ready_state = bot_state, game_id = game_id, api_key = self.api_key).model_dump_json())
     
@@ -259,7 +260,7 @@ class TuringBotClient:
                 
             elif message['type'] == 'end_game':
                 #remove player list from dictionary
-                self.__player_list.pop(message['game_id'], None) # remove game_id from dictionary if it exists
+                self.__player_list.pop(message['game_id'], None)
                 self.__player.pop(message['game_id'], None)
                 asyncio.create_task(self.async_end_game(message['game_id']))
 
