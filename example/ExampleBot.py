@@ -36,7 +36,7 @@ class ExampleBot(TuringBotClient):
                                 If the input is "Player Name: What's the next step?" the output should be "What's the next step?"
                                 '''
 
-    def start_game(self,game_id: int,bot: str,pl1: str,pl2: str,language: str) -> bool:
+    def start_game(self,game_id: int,bot: str,player_list: list,language: str) -> bool:
         print(f"Starting game {game_id}")
         self.active_games.add(game_id)
         self.chat_store[game_id] = [{"role":"system",
