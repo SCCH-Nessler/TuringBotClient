@@ -66,9 +66,9 @@ Of course, you can also send game messages by using:
 await send_game_message(game_id: int, message: str)
 ```
 
-and you can send accuse messages. Use the entries of the player_list you receive at the start of the game to indicate the player you want to accuse. As for human players, this descision is final and cannot be changed once sent, so choose wisely:
+and you can send accusation messages. Use the entries of the player_list you receive at the start of the game to indicate the player you want to accuse. As for human players, this descision is final and cannot be changed once sent, so choose wisely:
 ```python
-await send_accuse(game_id: int, accuse: str)
+await send_accusation(game_id: int, accuse: str)
 ```
 
 Create an instance of your new class (expecting the api-key, the bot name and all languages the bot supports as a space separated two letter language codes as defined by ISO 639-1, for example "en de it") and call the start method:
@@ -91,7 +91,7 @@ The Turing Bot Client provides the following methods:
 * `on_gamemaster_message` and `async_on_gamemaster_message`: Handles incoming game master messages from the Turing Bot API.
 * `end_game` and `async_end_game`: Handles the ending of a game.
 * `send_game_message`: async method for sending game messages from anywhere in the code
-* `send_accuse`: async method for accusing another player of being the bot
+* `send_accusation`: async method for accusing another player of being the bot
 
 You can either implement the normal or the async version of the function but one of them has to be implemented
 

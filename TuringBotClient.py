@@ -11,12 +11,11 @@ import websockets
 import json
 import asyncio
 import signal
-from typing import List
+from typing import List,Optional
 from base64 import b64encode
 
 import websockets.exceptions
 from pydantic import BaseModel, Field, model_serializer, constr
-from typing import Optional
 
 
 
@@ -51,7 +50,7 @@ class ShutdownMessage(BaseModel):
 class AccuseMessage(BaseModel):
     type: str = Field(default="accuse_message")
     game_id: int = Field(description="The game id of the game for which this message is supposed")
-    accuse: str = Field(description="The accusation message",min_length=1,max_length=255)
+    accusation: str = Field(description="The accusation message",min_length=1,max_length=255)
     api_key: str = Field(description="Your API key. This is required to ensure that you are allowed to access this game",
                          min_length=36,max_length=36)
     
@@ -76,6 +75,7 @@ class TuringBotClient:
         self._shutdown_already_running = False
         self.__player_list = {}
         self.__player = {}
+        self.__accusation_sent = {}
 
 
 
@@ -85,12 +85,17 @@ class TuringBotClient:
                 await self._websocket.send(GameMessage(type="game_message",game_id = game_id, message = message,api_key = self.api_key).model_dump_json())
 
     
-    async def send_accuse(self,game_id: int, accuse: str):
-        if accuse is not None:
-            if len(accuse) > 0:
-                #send only if accuse is in list of players
-                if accuse in self.__player_list[game_id] and accuse != self.__player[game_id]:  # Check if the accused player is in the game's player list
-                    await self._websocket.send(AccuseMessage(type="accuse_message",game_id = game_id, accuse = accuse,api_key = self.api_key).model_dump_json())
+    async def send_accusation(self,game_id: int, accusation: str):
+        if not self.__accusation_sent[game_id]:
+            if accusation is not None:
+                if len(accusation) > 0:
+                    #send only if accusation is in list of players
+                    if accusation in self.__player_list[game_id] and accusation != self.__player[game_id]:  # Check if the accused player is in the game's player list
+                        await self._websocket.send(AccuseMessage(type="accuse_message",game_id = game_id, accusation = accusation,api_key = self.api_key).model_dump_json())
+                        self.__accusation_sent[game_id] = True
+        else:
+            print(f"<WARNING> Accusation already sent for this bot in game {game_id}.",flush=True)
+
 
     async def _receive(self):
         messages = await self._websocket.recv()
@@ -100,6 +105,7 @@ class TuringBotClient:
         #store player list in self._players dictionary
         self.__player_list[game_id] = players_list
         self.__player[game_id] = bot
+        self.__accusation_sent[game_id] = False
         bot_state = await self.async_start_game(game_id,bot,players_list,language)
         await self._websocket.send(BotReadyMessage(type = "bot_ready", ready_state = bot_state, game_id = game_id, api_key = self.api_key).model_dump_json())
     
@@ -255,7 +261,7 @@ class TuringBotClient:
         while not self._shutdown_flag:
             message = await self._receive()
 
-            print("Received message:", message, flush=True)
+            #print("Received message:", message, flush=True)
 
             if message['type'] == 'game_message':
                 asyncio.create_task(self._game_message_sender(message['game_id'],
@@ -269,13 +275,12 @@ class TuringBotClient:
                                                     message['language']))
                 
             elif message['type'] == 'end_game':
-                #remove player list from dictionary
-
                 try:
                     self.__player_list.pop(message['game_id'], None)                
                     self.__player.pop(message['game_id'], None)
+                    self.__accusation_sent.pop(message['game_id'], None)
                 except Exception as e:
-                    print(f"<ERROR> Exception occurred while removing players from dictionary for game_id {message['game_id']}: {str(e)}")
+                    print(f"<ERROR> Exception occurred while removing entries from dictionaries for game_id {message['game_id']}: {str(e)}")
                 #asyncio.create_task(self.async_end_game(message['game_id']))
                 try:
                     asyncio.create_task(self.async_end_game(message['game_id']))
