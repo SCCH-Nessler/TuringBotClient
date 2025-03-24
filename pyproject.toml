@@ -1,21 +1,34 @@
 [project]
-name = "turing-bot-client"
-version = "0.0.3"
+name = "turingbotclient"
+version = "0.1.0"
 authors = [
   { name="Simon Schmid", email="simon.schmid@scch.at" },
+  { name="Severin Bergsmann", email="severin.bergsmann@scch.at" },
 ]
 description = "This library allows the development of bots for the turing game on play.turinggame.ai"
 readme = "README.md"
-requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "pydantic>=2.10.6",
+    "websockets>=15.0.1",
+]
 
-[build-system]
-requires = ["websockets>=12.0","pydantic>=2.8.2","setuptools"]
-build-backend = "setuptools.build_meta"
+[dependency-groups]
+dev = [
+    "ruff>=0.11.2",
+]
+
+[tool.ruff]
+line-length = 120
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["turing-bot-client*"]
 
 [project.urls]
 Homepage = "https://github.com/SCCH-Nessler/TuringBotClient"
