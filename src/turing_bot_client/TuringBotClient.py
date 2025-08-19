@@ -87,7 +87,7 @@ class TuringBotClient:
 
     
     async def send_accusation(self,game_id: int, accusation: str):
-        if not self.__accusation_sent[game_id]:
+        if game_id in self.__accusation_sent and not self.__accusation_sent[game_id]:
             if accusation is not None:
                 if len(accusation) > 0:
                     #send only if accusation is in list of players

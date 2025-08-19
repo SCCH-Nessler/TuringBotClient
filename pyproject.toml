@@ -1,6 +1,6 @@
 [project]
 name = "turing-bot-client"
-version = "0.0.4"
+version = "0.0.4.post2"
 authors = [
   { name="Simon Schmid", email="simon.schmid@scch.at" },
 ]
@@ -19,3 +19,7 @@ build-backend = "uv_build"
 
 [project.urls]
 Homepage = "https://github.com/SCCH-Nessler/TuringBotClient"
+
+[tool.uv.build-backend]
+module-root = "src"
+module-name = ["turing_bot_client", "TuringBotClient"]
