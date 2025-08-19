@@ -7,7 +7,7 @@ A very basic demo implementation of a bot for the turing game (play.turinggame.a
 __author__ = "Simon Schmid"
 
 
-from TuringBotClient import TuringBotClient
+from turing_bot_client import TuringBotClient
 from dotenv import load_dotenv
 import os
 from openai import OpenAI
