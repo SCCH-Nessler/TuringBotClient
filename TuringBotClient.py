@@ -11,6 +11,7 @@ import websockets
 import json
 import asyncio
 import signal
+import random
 from typing import List,Optional
 from base64 import b64encode
 
@@ -95,8 +96,13 @@ class TuringBotClient:
                         self.__accusation_sent[game_id] = True
         else:
             print(f"<WARNING> Accusation already sent for this bot in game {game_id}.",flush=True)
-
-
+    
+    async def on_accusation_request(self, game_id: int, bot: str, players: List[str]):
+        players.remove(bot)
+        accusation = random.choice(players)
+        await self.send_accusation(game_id, accusation)
+        raise NotImplementedError("on_accusation_request is not implemented yet. To ensure proper functionality, a random accusation is sent")
+        
     async def _receive(self):
         messages = await self._websocket.recv()
         return json.loads(messages)
@@ -281,19 +287,23 @@ class TuringBotClient:
                     self.__accusation_sent.pop(message['game_id'], None)
                 except Exception as e:
                     print(f"<ERROR> Exception occurred while removing entries from dictionaries for game_id {message['game_id']}: {str(e)}")
-                #asyncio.create_task(self.async_end_game(message['game_id']))
+                
                 try:
                     asyncio.create_task(self.async_end_game(message['game_id']))
                 except Exception as e:
                     print(f"<ERROR> Exception occurred while ending game {message['game_id']}: {str(e)}")
 
             elif message['type'] == 'game_master':
-                print(f"Game Master Message for Game ID {message['game_id']}: {message['message']}")
+                #print(f"Game Master Message for Game ID {message['game_id']}: {message['message']}")
                 asyncio.create_task(self.async_on_gamemaster_message(message['game_id'],
                                                                     message['message'],
                                                                     message['player'],
                                                                     message['bot']))
-                    
+            
+            elif message['type'] == 'request_accusation':
+                asyncio.create_task(self.on_accusation_request(message['game_id'],
+                                                                     message['bot'],
+                                                                     message['players']))
 
 
             
