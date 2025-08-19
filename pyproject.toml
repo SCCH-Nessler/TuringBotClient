@@ -1,6 +1,6 @@
 [project]
 name = "turing-bot-client"
-version = "0.0.4.post2"
+version = "0.0.4.post3"
 authors = [
   { name="Simon Schmid", email="simon.schmid@scch.at" },
 ]
